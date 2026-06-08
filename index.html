@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcards - Perícia Contábil</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(180deg, #eef7ff, #ffffff);
+  color: #000;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
+
+.app {
+  width: 100%;
+  max-width: 460px;
+  text-align: center;
+}
+
+.header {
+  background: #ffffff;
+  border: 3px solid #0b2f5b;
+  border-radius: 18px;
+  padding: 14px 12px;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12);
+}
+
+h1 {
+  font-size: 24px;
+  margin: 0 0 6px;
+  color: #0b2f5b;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.sub {
+  font-size: 18px;
+  font-weight: 900;
+  color: #000;
+  line-height: 1.35;
+}
+
+.progress {
+  font-size: 18px;
+  font-weight: 900;
+  margin: 12px 0;
+  color: #000;
+}
+
+.bar {
+  width: 100%;
+  height: 12px;
+  background: #d9d9d9;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.bar-fill {
+  height: 100%;
+  width: 0%;
+  background: #0b2f5b;
+  transition: width .3s;
+}
+
+.card-area {
+  perspective: 1000px;
+  width: 100%;
+  min-height: 430px;
+}
+
+.card {
+  width: 100%;
+  min-height: 430px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform .55s;
+  cursor: pointer;
+}
+
+.card.flipped {
+  transform: rotateY(180deg);
+}
+
+.face {
+  position: absolute;
+  width: 100%;
+  min-height: 430px;
+  backface-visibility: hidden;
+  border-radius: 24px;
+  padding: 28px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 8px 22px rgba(0,0,0,.20);
+  border: 3px solid #111;
+}
+
+.front {
+  background: #ffd6e8;
+}
+
+.back {
+  background: #cfeeff;
+  transform: rotateY(180deg);
+}
+
+.emoji {
+  font-size: 42px;
+  margin-bottom: 14px;
+}
+
+.question {
+  font-size: 28px;
+  line-height: 1.25;
+  font-weight: 900;
+  color: #000;
+}
+
+.answer {
+  font-size: 25px;
+  line-height: 1.32;
+  font-weight: 900;
+  color: #000;
+}
+
+.hint {
+  margin-top: 18px;
+  font-size: 15px;
+  font-weight: 900;
+  color: #000;
+}
+
+.buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+button {
+  border: none;
+  border-radius: 14px;
+  padding: 15px 10px;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  background: #0b2f5b;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,.18);
+}
+
+button:active {
+  transform: scale(.98);
+}
+
+button.secondary {
+  background: #198754;
+}
+
+button.warn {
+  background: #b00020;
+}
+
+.footer {
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #333;
+}
+
+@media (max-width: 380px) {
+  h1 { font-size: 21px; }
+  .sub { font-size: 16px; }
+  .question { font-size: 25px; }
+  .answer { font-size: 22px; }
+  .card-area, .card, .face { min-height: 400px; }
+  button { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>Curso de Contabilidade Professor Moreira</h1>
+    <div class="sub">Perícia Contábil<br>WhatsApp (61) 98532-3574</div>
+  </div>
+
+  <div class="progress" id="progress"></div>
+  <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+
+  <div class="card-area">
+    <div class="card" id="card" onclick="flipCard()">
+      <div class="face front">
+        <div class="emoji">❓</div>
+        <div class="question" id="frontText"></div>
+        <div class="hint">Toque no cartão para virar</div>
+      </div>
+      <div class="face back">
+        <div class="emoji">✅</div>
+        <div class="answer" id="backText"></div>
+        <div class="hint">Toque novamente para voltar</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="buttons">
+    <button onclick="event.stopPropagation(); prevCard()">⬅️ Voltar</button>
+    <button onclick="event.stopPropagation(); nextCard()">Avançar ➡️</button>
+    <button class="secondary" onclick="event.stopPropagation(); flipCard()">🔄 Virar</button>
+    <button class="warn" onclick="event.stopPropagation(); restart()">🔁 Reiniciar</button>
+  </div>
+
+  <div class="footer">Estude, revise e memorize os pontos mais cobrados.</div>
+</div>
+
+<script>
+const cards = [
+  {
+    "front": "O que é perícia?",
+    "back": "Perícia é meio de prova técnica usado quando a solução do fato depende de conhecimento técnico ou científico."
+  },
+  {
+    "front": "Qual é a finalidade da perícia?",
+    "back": "Auxiliar o julgador ou as partes na tomada de decisão, produzindo elementos técnicos de prova."
+  },
+  {
+    "front": "Perícia é prova comum ou técnica?",
+    "back": "É prova técnica."
+  },
+  {
+    "front": "O que é exame?",
+    "back": "Exame é a análise de pessoas, animais ou coisas."
+  },
+  {
+    "front": "O que é vistoria?",
+    "back": "Vistoria é a verificação realizada no próprio local para constatar situações, danos ou condições existentes."
+  },
+  {
+    "front": "O que é avaliação?",
+    "back": "Avaliação é a determinação de valor de bens, direitos, obrigações ou empresas."
+  },
+  {
+    "front": "O que é perícia judicial?",
+    "back": "É a perícia realizada sob tutela do Poder Judiciário."
+  },
+  {
+    "front": "Quais são os tipos de perícia extrajudicial?",
+    "back": "Arbitral, estatal e voluntária."
+  },
+  {
+    "front": "O que é perícia arbitral?",
+    "back": "É a perícia realizada no âmbito da arbitragem."
+  },
+  {
+    "front": "O que é perícia estatal?",
+    "back": "É a perícia realizada por órgãos públicos ou órgãos de controle."
+  },
+  {
+    "front": "O que é perícia voluntária?",
+    "back": "É a perícia contratada espontaneamente pelas partes."
+  },
+  {
+    "front": "O que é perícia consensual?",
+    "back": "É aquela em que as partes escolhem o perito de comum acordo."
+  },
+  {
+    "front": "Quais são os requisitos da perícia consensual?",
+    "back": "Partes plenamente capazes e causa que admita autocomposição."
+  },
+  {
+    "front": "O que é prova técnica simplificada?",
+    "back": "É usada quando a matéria for de menor complexidade, sem necessidade de laudo completo."
+  },
+  {
+    "front": "Na prova técnica simplificada há laudo completo?",
+    "back": "Não. O especialista é ouvido pelo juiz e pode usar recursos tecnológicos."
+  },
+  {
+    "front": "Quem pode ser perito contábil?",
+    "back": "Profissional legalmente habilitado, regular no CRC e com conhecimento técnico na matéria."
+  },
+  {
+    "front": "Como o perito é escolhido?",
+    "back": "Em regra, por cadastro mantido pelo tribunal."
+  },
+  {
+    "front": "Quando pode haver exceção ao cadastro do tribunal?",
+    "back": "Quando não houver profissional cadastrado na localidade."
+  },
+  {
+    "front": "Quem escolhe o assistente técnico?",
+    "back": "As partes escolhem o assistente técnico."
+  },
+  {
+    "front": "O assistente técnico acompanha a perícia?",
+    "back": "Sim. Ele acompanha a perícia e emite parecer técnico."
+  },
+  {
+    "front": "Assistente técnico está sujeito a impedimento e suspeição?",
+    "back": "Não está sujeito às regras de impedimento e suspeição do CPC."
+  },
+  {
+    "front": "Qual documento é produzido pelo assistente técnico?",
+    "back": "Parecer Técnico Contábil."
+  },
+  {
+    "front": "Qual documento é produzido pelo perito?",
+    "back": "Laudo Pericial Contábil."
+  },
+  {
+    "front": "O que são quesitos?",
+    "back": "São perguntas formuladas ao perito."
+  },
+  {
+    "front": "O que são quesitos iniciais?",
+    "back": "São perguntas apresentadas no início da perícia."
+  },
+  {
+    "front": "O que são quesitos suplementares?",
+    "back": "São perguntas feitas durante a diligência, geralmente diante de fatos novos."
+  },
+  {
+    "front": "O que são quesitos de esclarecimento?",
+    "back": "São perguntas feitas após a entrega do laudo para eliminar dúvidas ou contradições."
+  },
+  {
+    "front": "Prazo para indicar assistente técnico e apresentar quesitos?",
+    "back": "15 dias."
+  },
+  {
+    "front": "Prazo para escusa do perito?",
+    "back": "15 dias."
+  },
+  {
+    "front": "Prazo para restituição de honorários recebidos indevidamente?",
+    "back": "15 dias."
+  },
+  {
+    "front": "Impedimento tem natureza objetiva ou subjetiva?",
+    "back": "Objetiva."
+  },
+  {
+    "front": "Exemplo de impedimento?",
+    "back": "Cônjuge, companheiro ou parente até terceiro grau."
+  },
+  {
+    "front": "Suspeição tem natureza objetiva ou subjetiva?",
+    "back": "Subjetiva."
+  },
+  {
+    "front": "Exemplo de suspeição?",
+    "back": "Amigo íntimo ou inimigo."
+  },
+  {
+    "front": "O que é foro íntimo?",
+    "back": "É a possibilidade de o perito declarar-se suspeito sem revelar os motivos."
+  },
+  {
+    "front": "O que deve conter o laudo pericial?",
+    "back": "Objeto da perícia, análise técnica, método utilizado e respostas aos quesitos."
+  },
+  {
+    "front": "Como devem ser as respostas aos quesitos?",
+    "back": "Objetivas, completas e claras."
+  },
+  {
+    "front": "As respostas aos quesitos podem ser lacônicas?",
+    "back": "Não. Devem ser claras e completas."
+  },
+  {
+    "front": "O que é diligência?",
+    "back": "É a solicitação de documentos, informações ou esclarecimentos necessários à perícia."
+  },
+  {
+    "front": "Qual documento formaliza a diligência?",
+    "back": "Termo de Diligência."
+  },
+  {
+    "front": "O que é investigação?",
+    "back": "É a busca de fatos ou informações que estejam ocultos."
+  },
+  {
+    "front": "O que é arbitramento?",
+    "back": "É a determinação técnica de valores, quantidades ou soluções."
+  },
+  {
+    "front": "O que é mensuração?",
+    "back": "É a quantificação física."
+  },
+  {
+    "front": "O que é avaliação na perícia?",
+    "back": "É a quantificação monetária."
+  },
+  {
+    "front": "O que é certificação?",
+    "back": "É a atestação da informação obtida."
+  },
+  {
+    "front": "Quais critérios influenciam os honorários periciais?",
+    "back": "Complexidade, relevância e horas estimadas."
+  },
+  {
+    "front": "Qual é o adiantamento máximo de honorários?",
+    "back": "Até 50%."
+  },
+  {
+    "front": "O que são perícias complexas?",
+    "back": "São perícias que envolvem mais de uma área do conhecimento."
+  },
+  {
+    "front": "Em perícia complexa, cada especialista responde por quê?",
+    "back": "Cada especialista responde apenas pela sua área técnica."
+  },
+  {
+    "front": "O contador responde pela conclusão do engenheiro?",
+    "back": "Não. Cada especialista responde pela sua área."
+  },
+  {
+    "front": "O que é apuração de haveres?",
+    "back": "É a determinação do valor que o sócio retirante tem direito a receber."
+  },
+  {
+    "front": "Qual documento é usado na apuração de haveres?",
+    "back": "Balanço de Determinação ou Balanço Especial."
+  },
+  {
+    "front": "Na apuração de haveres, os ativos podem ser avaliados por qual critério?",
+    "back": "Valor de mercado ou valor justo."
+  },
+  {
+    "front": "Pode haver goodwill na apuração de haveres?",
+    "back": "Sim, quando cabível."
+  },
+  {
+    "front": "Empréstimo do sócio para a empresa interfere nos haveres?",
+    "back": "Sim. Pode haver compensação nos haveres."
+  },
+  {
+    "front": "Quais são as responsabilidades do perito?",
+    "back": "Civil, penal e profissional."
+  },
+  {
+    "front": "Responsabilidade civil gera o quê?",
+    "back": "Indenização por danos."
+  },
+  {
+    "front": "Responsabilidade penal pode ocorrer quando?",
+    "back": "Quando houver informação falsa."
+  },
+  {
+    "front": "Informação falsa pode gerar qual consequência?",
+    "back": "Inabilitação de 2 a 5 anos e comunicação ao CRC."
+  },
+  {
+    "front": "Qual é a diferença principal entre perícia e auditoria?",
+    "back": "Perícia tem foco específico em litígio ou questão delimitada. Auditoria analisa demonstrações contábeis como um todo."
+  },
+  {
+    "front": "Perícia trabalha com foco amplo ou específico?",
+    "back": "Foco específico."
+  },
+  {
+    "front": "Auditoria trabalha com foco em quê?",
+    "back": "Nas demonstrações contábeis como um todo."
+  },
+  {
+    "front": "Resumo: Exame significa?",
+    "back": "Pessoas, animais e coisas."
+  },
+  {
+    "front": "Resumo: Vistoria significa?",
+    "back": "Verificação no local."
+  },
+  {
+    "front": "Resumo: Avaliação significa?",
+    "back": "Determinação de valor."
+  },
+  {
+    "front": "Resumo: Parecer é de quem?",
+    "back": "Do assistente técnico."
+  },
+  {
+    "front": "Resumo: Laudo é de quem?",
+    "back": "Do perito."
+  },
+  {
+    "front": "Resumo: impedimento é?",
+    "back": "Objetivo."
+  },
+  {
+    "front": "Resumo: suspeição é?",
+    "back": "Subjetiva."
+  },
+  {
+    "front": "Resumo: foro íntimo exige explicação?",
+    "back": "Não precisa explicar."
+  }
+];
+
+let current = Number(localStorage.getItem("flashcard_pericia_current")) || 0;
+if (current < 0 || current >= cards.length) current = 0;
+
+const card = document.getElementById("card");
+const frontText = document.getElementById("frontText");
+const backText = document.getElementById("backText");
+const progress = document.getElementById("progress");
+const barFill = document.getElementById("barFill");
+
+function renderCard() {
+  card.classList.remove("flipped");
+  frontText.innerHTML = cards[current].front;
+  backText.innerHTML = cards[current].back;
+  progress.innerHTML = `Cartão ${current + 1} de ${cards.length}`;
+  barFill.style.width = `${((current + 1) / cards.length) * 100}%`;
+  localStorage.setItem("flashcard_pericia_current", current);
+}
+
+function flipCard() {
+  card.classList.toggle("flipped");
+}
+
+function nextCard() {
+  if (current < cards.length - 1) {
+    current++;
+    renderCard();
+  } else {
+    alert("Parabéns! Você concluiu todos os flashcards de Perícia Contábil.");
+  }
+}
+
+function prevCard() {
+  if (current > 0) {
+    current--;
+    renderCard();
+  }
+}
+
+function restart() {
+  current = 0;
+  localStorage.setItem("flashcard_pericia_current", current);
+  renderCard();
+}
+
+document.addEventListener("keydown", function(e) {
+  if (e.key === "ArrowRight") nextCard();
+  if (e.key === "ArrowLeft") prevCard();
+  if (e.key === " " || e.key === "Enter") flipCard();
+});
+
+renderCard();
+</script>
+
+</body>
+</html>
